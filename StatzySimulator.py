@@ -46,6 +46,12 @@ class StatzySimulator:
             self.registers[reg1] = self.registers[reg2] + float(self.registers[reg3])
         elif opcode == "addi":
             reg1, reg2, imm = parts[1].rstrip(','), parts[2].rstrip(','), (parts[3])
+            # Check if immediate value is not a number
+            try:
+                imm = float(imm)
+            except ValueError:
+                self.print_callback(f"[ERROR] Invalid immediate value: {imm}")
+                return "Invalid immediate value"
             self.registers[reg1] = self.registers[reg2] + float(imm)
         elif opcode == "mult":
             reg1, reg2, reg3 = parts[1].rstrip(','), parts[2].rstrip(','), parts[3]
@@ -115,6 +121,11 @@ class StatzySimulator:
             # Handle string literal
             if arg.startswith('"') and arg.endswith('"'):
                 self.print_callback(arg[1:-1])  # remove the quotes and print
+            # Handle register or memory address
+            elif arg in self.registers:
+                self.print_callback(str(self.registers[arg]))
+                # convert back to float if needed
+                float(self.registers[arg])
             else:
                 print(f"Unknown string or invalid syntax: {arg}")
 
@@ -167,7 +178,9 @@ class StatzySimulator:
             X_d, mu_not, stanError = parts[1].rstrip(','), parts[2].rstrip(','), parts[3]
             # results are stored in the register X_d
             self.registers[X_d] = (self.registers[X_d] - self.registers[mu_not]) / int(self.registers[stanError])
-                
+        elif opcode == "#":
+            # Comment line, do nothing
+            pass
         else:
             return f"Program terminated: Unknown instruction {opcode}"
         self.pc += 1
