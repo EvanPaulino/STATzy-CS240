@@ -12,9 +12,24 @@ class StatzySimulator:
         
 
     def load_program(self, code):
-        self.instructions = [line.strip() for line in code.split('\n') if line.strip()]
+        self.instructions = []
+        self.labels = {}
         self.pc = 0
         self.running = True
+
+        lines = [line.strip() for line in code.split('\n') if line.strip()]
+
+        for idx, line in enumerate(lines):
+            if ":" in line:
+                label, instruction = line.split(":", 1)
+                label = label.strip()
+                instruction = instruction.strip()
+                self.labels[label] = len(self.instructions)
+                if instruction:  # label + instruction on same line
+                    self.instructions.append(instruction)
+            else:
+                self.instructions.append(line)
+
 
     def step(self):
         if not self.running or self.pc >= len(self.instructions):
@@ -46,26 +61,55 @@ class StatzySimulator:
                 return "Division by zero error"
         elif opcode == "mod":
             reg1, reg2 = parts[1].rstrip(','), parts[2]
-            if self.registers[reg2] != 0:
+            if self.registers[reg2] == 0:
                 return "division by zero error"
-            self.registers["MD"] = self.registers[reg1] % self.registers[reg2]
+            self.registers["md"] = self.registers[reg1] % self.registers[reg2]
         elif opcode == "sqrt":
             reg1 = parts[1].rstrip(',')
             self.registers[reg1] = (self.registers[reg1] ** 0.5)
         elif opcode == "sqrd":
             reg1 = parts[1].rstrip(',')
             self.registers[reg1] = self.registers[reg1] ** 2
-        elif opcode == "jp":
-            self.pc = int(parts[1])
+        elif opcode == "j":
+                target = parts[1]
+                if target.isdigit():
+                    self.pc = int(target)
+                elif target in self.labels:
+                    self.pc = self.labels[target]
+                else:
+                    self.print_callback(f"[ERROR] Unknown label: {target}")
+                return  # skip normal pc increment
         elif opcode == "jal":
-            self.registers["GB"] = self.pc + 1
-            self.pc = int(parts[1])
+                target = parts[1]
+
+                # Save return address (next instruction index)
+                self.registers["gb"] = self.pc + 1
+
+                # Jump to label
+                if target in self.labels:
+                    self.pc = self.labels[target]
+                else:
+                    self.print_callback(f"[ERROR] Unknown label: {target}")
+                return  # skip normal pc increment
         elif opcode == "jr":
-            self.pc = self.registers["GB"]
+            reg = parts[1]
+            if reg in self.registers:
+                self.pc = self.registers[reg]
+            else:
+                self.print_callback(f"[ERROR] Unknown register: {reg}")
+            return  # skip normal pc increment
+        
         elif opcode == "beq":
             reg1, reg2, label = parts[1].rstrip(','), parts[2].rstrip(','), parts[3]
-            if self.registers[reg1] == self.registers[reg2]:
-                self.pc = self.instructions.index(label)
+            if reg1 not in self.registers or reg2 not in self.registers:
+                self.print_callback(f"[ERROR] Invalid register in BEQ: {reg1}, {reg2}")
+            elif label not in self.labels:
+                self.print_callback(f"[ERROR] Unknown label in BEQ: {label}")
+            else:
+                if self.registers[reg1] == self.registers[reg2]:
+                    self.pc = self.labels[label]
+                    return  # skip pc += 1
+                    
         elif opcode == "print":
             arg = " ".join(parts[1:])
             # Handle string literal
