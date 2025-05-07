@@ -4,12 +4,13 @@ op_codes = {
     "add": "000111",
     "multiply": "000110",
     "subtract": "000101",
+    "div": "000000",
     "jal": "001101",
     "beq": "001000",
-    "jump": "001001",
-    "modulo": "001010",
+    "j": "001001",
+    "mod": "001010",
     "sqrt": "001011",
-    "square": "001100",
+    "sqrd": "001100",
     "avr": "100000",
     "mid": "100001",
     "iqr": "100010",
@@ -28,10 +29,10 @@ func_codes = {
     "add": "00000000",
     "subtract": "00000001",
     "multiply": "00000010",
-    "divide": "00000011",
-    "modulo": "00000100",
+    "div": "00000011",
+    "mod": "00000100",
     "sqrt": "00000101",
-    "square": "00000110",
+    "sqrd": "00000110",
     "avr": "00000111",
     "mid": "00001000",
     "iqr": "00001001",
@@ -66,7 +67,7 @@ shift_logic_amount = "000000"
 
 def interpret_line(mips_file: str):
     input_file = open(mips_file, "r")
-    output_file = open("programU.bin", "w")
+    output_file = open("program1.bin", "w")
     for instruction in input_file:
         bin = assemble(instruction)
         output_file.write(bin)
