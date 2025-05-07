@@ -46,6 +46,8 @@ class StatzySimulator:
                 return "Division by zero error"
         elif opcode == "mod":
             reg1, reg2 = parts[1].rstrip(','), parts[2]
+            if self.registers[reg2] != 0:
+                return "division by zero error"
             self.registers["MD"] = self.registers[reg1] % self.registers[reg2]
         elif opcode == "sqrt":
             reg1 = parts[1].rstrip(',')
